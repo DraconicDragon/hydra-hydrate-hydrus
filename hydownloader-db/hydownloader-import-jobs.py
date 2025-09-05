@@ -8,7 +8,7 @@
 #
 
 defAPIURL = "http://127.0.0.1:45869"
-defAPIKey = "1bd00febaf9e3d3e3856f855318aecfab42c1d91df1e4b1415ac13d5a20661f9"
+defAPIKey = "api key or something"
 defTagRepos = ["my tags"]
 defTagReposForNonUrlSources = ["my tags"]
 # These are the defaults that Hydrus automatically creates,
