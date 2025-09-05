@@ -1,0 +1,383 @@
+{
+    "extractor":
+    {
+        "proxy": null,
+        "metadata": true,
+
+        "retries": 4,
+        "timeout": 30.0,
+        "verify": true,
+
+        "sleep": 3,
+        "sleep-request": 1,
+        "sleep-extractor": 1,
+
+        "postprocessors": [
+            {
+                "name": "ugoira",
+                "whitelist": ["pixiv", "danbooru"],
+                "keep-files": true,
+                "mode": "mkvmerge",
+                "ffmpeg-twopass": false,
+                "ffmpeg-args": ["-nostdin", "-c:v", "libvpx-vp9", "-lossless", "1", "-pix_fmt", "yuv420p", "-y"]
+            },
+            {
+                "name": "ugoira",
+                "whitelist": ["pixiv", "danbooru"],
+                "keep-files": false,
+                "mode": "archive",
+                "metadata": true
+            }
+        ],
+
+        "tags": true,
+        "external": true,
+        "artstation":
+        {
+            "external": false,
+            "postprocessors": [
+                {
+                    "name": "mtime"
+                }
+            ]
+        },
+        "aryion":
+        {
+            "username": null,
+            "password": null,
+            "recursive": true
+        },
+        "blogger":
+        {
+            "videos": true
+        },
+        "danbooru": {
+            "username": null,
+            "password": null,
+            "ugoira": true,
+            "metadata": ["artist_commentary","replacements", "parent", "children", "ai_tags"],
+            "external": false
+        },
+        "gelbooru":
+        {
+            "api-key": null,
+            "user-id": null
+        },
+        "derpibooru":
+        {
+            "api-key": null,
+            "filter": 56027
+        },
+        "deviantart":
+        {
+            "extra": true,
+            "flat": true,
+            "folders": false,
+            "include": "gallery",
+            "journals": "html",
+            "mature": true,
+            "metadata": "all",
+            "original": true,
+            "quality": "png",
+            "wait-min": 0
+        },
+        "e621":
+        {
+            "username": null,
+            "password": null
+        },
+        "exhentai":
+        {
+            "username": null,
+            "password": null,
+            "domain": "auto",
+            "metadata": false,
+            "original": true,
+            "sleep-request": 5.0
+        },
+        "flickr":
+        {
+            "videos": true,
+            "size-max": null
+        },
+        "furaffinity":
+        {
+            "descriptions": "text",
+            "include": "gallery"
+        },
+        "gfycat":
+        {
+            "format": "mp4"
+        },
+        "hentaifoundry":
+        {
+            "include": "all"
+        },
+        "hentainexus":
+        {
+            "original": true
+        },
+        "hitomi":
+        {
+            "metadata": true
+        },
+        "idolcomplex":
+        {
+            "username": null,
+            "password": null,
+            "sleep-request": 5.0
+        },
+        "imgbb":
+        {
+            "username": null,
+            "password": null
+        },
+        "imgur":
+        {
+            "mp4": true
+        },
+        "inkbunny":
+        {
+            "username": null,
+            "password": null,
+            "orderby": "create_datetime"
+        },
+        "instagram":
+        {
+            "api": "rest",
+            "username": null,
+            "password": null,
+            "include": "posts,reels,stories,highlights,avatar",
+            "sleep-request": [6.0, 12.0],
+            "videos": true
+        },
+        "khinsider":
+        {
+            "format": "mp3"
+        },
+        "mangadex":
+        {
+            "api-server": "https://api.mangadex.org"
+        },
+        "mangoxo":
+        {
+            "username": null,
+            "password": null
+        },
+        "newgrounds":
+        {
+            "username": null,
+            "password": null,
+            "flash": true,
+            "include": "art"
+        },
+        "nijie":
+        {
+            "username": null,
+            "password": null,
+            "include": "illustration,doujin"
+        },
+        "oauth":
+        {
+            "browser": true,
+            "cache": true,
+            "port": 6414
+        },
+        "patreon":
+        {
+            "format-images": "original"
+        },
+        "pillowfort":
+        {
+            "reblogs": false
+        },
+        "pinterest":
+        {
+            "sections": true,
+            "videos": true
+        },
+        "pixiv":
+        {
+            "avatar": false,
+            "tags": "original",
+            "ugoira": "original",
+            "metadata": true,
+            "include": ["artworks", "novel-user"],
+            "ranking": {
+                "max-posts": 100
+            },
+            "embeds": true,
+            "covers": true,
+            "captions": true,
+            "comments": false,
+            "sanity": false
+        },
+        "pixiv-novel":
+        {
+            "full-series": true,
+            "tags": "original",
+            "embeds": true,
+            "covers": true,
+            "captions": true,
+            "comments": false
+        },
+        "fanbox":
+        {
+            "comments": true
+        },
+        "reactor":
+        {
+            "sleep-request": 5.0
+        },
+        "reddit":
+        {
+            "comments": 0,
+            "morecomments": false,
+            "date-min": 0,
+            "date-max": 253402210800,
+            "date-format": "%Y-%m-%dT%H:%M:%S",
+            "id-min": "0",
+            "id-max": "zik0zj",
+            "recursion": 0,
+            "videos": true,
+            "user-agent": "Python:gallery-dl:0.8.4 (by /u/mikf1)"
+        },
+        "redgifs":
+        {
+            "format": "hd"
+        },
+        "sankakucomplex":
+        {
+            "embeds": false,
+            "videos": true
+        },
+        "sankaku":
+        {
+            "username": null,
+            "password": null
+        },
+        "smugmug":
+        {
+            "videos": true
+        },
+        "seiga":
+        {
+            "username": null,
+            "password": null
+        },
+        "subscribestar":
+        {
+            "username": null,
+            "password": null
+        },
+        "tiktok":
+        {
+            "audio" : false,
+            "videos": true,
+
+            "user": {
+                "avatar": false,
+                "module": null,
+                "tiktok-range": ""
+            }
+        },
+        "tsumino":
+        {
+            "username": null,
+            "password": null
+        },
+        "tumblr":
+        {
+            "avatar": false,
+            "external": false,
+            "inline": true,
+            "posts": "all",
+            "reblogs": true
+        },
+        "twitter":
+        {
+            "username": null,
+            "password": null,
+            "cards": false,
+            "conversations": false,
+            "quoted": true,
+            "replies": "self",
+            "retweets": false,
+            "twitpic": false,
+            "users": "media",
+            "videos": true,
+            "fallback": false
+        },
+        "unsplash":
+        {
+            "format": "raw"
+        },
+        "vsco":
+        {
+            "videos": true
+        },
+        "wallhaven":
+        {
+            "api-key": null
+        },
+        "weasyl":
+        {
+            "api-key": null
+        },
+        "weibo":
+        {
+            "retweets": true,
+            "videos": true
+        },
+        "booru":
+        {
+            "tags": true,
+            "notes": true
+        },
+        "moebooru":
+        {
+            "tags": true,
+            "notes": true,
+            "metadata": true
+        },
+        "kemono":
+        {
+            "metadata": true,
+            "comments": true,
+            "dms": true,
+            "duplicates": true,
+            "revisions": true,
+            "announcements": true
+        },
+        "bluesky":
+        {
+            "metadata": true
+        }
+    },
+
+    "downloader":
+    {
+        "filesize-min": null,
+        "filesize-max": null,
+        "mtime": true,
+        "rate": null,
+        "retries": 4,
+        "timeout": 30.0,
+        "verify": true,
+
+        "http":
+        {
+            "adjust-extensions": true,
+            "headers": null
+        },
+
+        "ytdl":
+        {
+            "format": null,
+            "forward-cookies": false,
+            "logging": true,
+            "outtmpl": null,
+            "raw-options": null
+        }
+    }
+}
