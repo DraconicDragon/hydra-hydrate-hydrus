@@ -55,8 +55,9 @@
             "username": null,
             "password": null,
             "ugoira": true,
-            "metadata": ["artist_commentary","replacements", "parent", "children", "ai_tags"],
-            "external": false
+            "metadata": true,
+            "external": false,
+            "path-restrict": "windows"
         },
         "gelbooru":
         {
@@ -347,7 +348,8 @@
             "dms": true,
             "duplicates": true,
             "revisions": true,
-            "announcements": true
+            "announcements": true,
+            "endpoint": "posts+"
         },
         "bluesky":
         {
