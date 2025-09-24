@@ -7,10 +7,11 @@
 # You probably want to change these
 #
 
+# region: default config
 defAPIURL = "http://127.0.0.1:45869"
-defAPIKey = "api key or something"
-defTagRepos = ["my tags"]
-defTagReposForNonUrlSources = ["my tags"]
+defAPIKey = "they key of keys"
+defTagRepos = ["downloader tags"]
+defTagReposForNonUrlSources = ["downloader tags"]
 # These are the defaults that Hydrus automatically creates,
 # you'll have to add here any others that appear in the importer configuration.
 # You can get the key from Hydrus in the review services window.
@@ -23,9 +24,10 @@ defServiceNamesToKeys = {
 # You can implement any global blacklists/whitelists or transformations here
 def defGlobalResultFilter(abspath: str, json_data: dict, tags: set[tuple[str, str]], urls: list[str], notes: set[tuple[str, str]], domain_times: dict[str, datetime]):
     return tags, urls, notes, domain_times
+# endregion
 
 #
-# Default import job - main config
+# region: Default import job - main config
 #
 
 j = ImportJob(name = "default",
@@ -67,10 +69,10 @@ g.urls(name = 'source URLs from single URL queue', allowNoResult = True) \
 
 g.urls(name = 'gallery-dl file url', allowEmpty = True) \
  .values(lambda: (u := json_data.get('gallerydl_file_url', '')) and ('' if u.startswith('text:') else u))
-
+#endregion
 
 #
-# Rules for pixiv
+# region: pixiv
 #
 
 g = j.group(tagReposForNonUrlSources = defTagReposForNonUrlSources, filter = lambda: pstartswith(path, 'gallery-dl/pixiv/'))
@@ -100,9 +102,10 @@ g.tags(name = 'pixiv generated tags (title)', tagRepos = defTagRepos, allowEmpty
 
 g.urls(name = 'pixiv artwork url') \
  .values(lambda: 'https://www.pixiv.net/en/artworks/'+str(json_data['id']))
+# endregion
 
 #
-# Rules for nijie.info
+# region: nijie.info
 #
 
 g = j.group(tagReposForNonUrlSources = defTagReposForNonUrlSources, filter = lambda: pstartswith(path, 'gallery-dl/nijie/'))
@@ -120,9 +123,10 @@ g.tags(name = 'nijie generated tags', tagRepos = defTagRepos) \
 g.urls(name = 'nijie urls') \
  .values(lambda: 'https://nijie.info/view.php?id='+str(json_data['image_id'])) \
  .values(lambda: json_data['url'])
+# endregion
 
 #
-# Rules for Patreon
+# region: Patreon
 #
 
 g = j.group(tagReposForNonUrlSources = defTagReposForNonUrlSources, filter = lambda: pstartswith(path, 'gallery-dl/patreon/'))
@@ -139,9 +143,10 @@ g.tags(name = 'patreon generated tags (title)', tagRepos = defTagRepos, allowEmp
 
 g.urls(name = 'patreon urls') \
  .values(lambda: json_data['url'])
+# endregion
 
 #
-# Rules for Newgrounds
+# region: Newgrounds
 #
 
 g = j.group(tagReposForNonUrlSources = defTagReposForNonUrlSources, filter = lambda: pstartswith(path, 'gallery-dl/newgrounds/'))
@@ -160,9 +165,10 @@ g.urls(name = 'newgrounds url') \
 
 g.urls(name = 'newgrounds post url') \
  .values(lambda: json_data['post_url'])
+# endregion
 
 #
-# Rules for Mastodon instances
+# region: Mastodon instances
 #
 
 g = j.group(tagReposForNonUrlSources = defTagReposForNonUrlSources, filter = lambda: pstartswith(path, 'gallery-dl/mastodon/'))
@@ -180,10 +186,10 @@ g.tags(name = 'mastodon generated tags', tagRepos = defTagRepos) \
 g.urls(name = 'mastodon urls') \
  .values(lambda: json_data['url']) \
  .values(lambda: json_data['uri'])
-
+# endregion
 
 #
-# Rules for misskey instances
+# region: misskey instances
 #
 
 g = j.group(tagReposForNonUrlSources = defTagReposForNonUrlSources, filter = lambda: pstartswith(path, 'gallery-dl/misskey/'))
@@ -204,10 +210,10 @@ g.tags(name = 'misskey generated tags', tagRepos = defTagRepos, skipOnError = Tr
 g.urls(name = 'misskey urls') \
  .values(lambda: json_data['file']['url']) \
  .values(lambda: 'https://'+json_data['instance']+'/notes/'+json_data['id'])
-
+# endregion
 
 #
-# Rules for WebToons
+# region: WebToons
 #
 
 g = j.group(tagReposForNonUrlSources = defTagReposForNonUrlSources, filter = lambda: pstartswith(path, 'gallery-dl/webtoons/'))
@@ -220,9 +226,10 @@ g.tags(name = 'webtoons generated tags', tagRepos = defTagRepos) \
 
 g.urls(name = 'webtoons urls') \
  .values(lambda: 'https://www.webtoons.com/'+json_data['lang']+'/'+json_data['genre']+'/'+json_data['comic']+'/list?title_no='+json_data['title_no'])
+# endregion
 
 #
-# Rules for danbooru
+# region: danbooru
 #
 
 g = j.group(tagReposForNonUrlSources = defTagReposForNonUrlSources, filter = lambda: pstartswith(path, 'gallery-dl/danbooru/'))
@@ -230,8 +237,11 @@ g = j.group(tagReposForNonUrlSources = defTagReposForNonUrlSources, filter = lam
 g.tags(name = 'danbooru generated tags', tagRepos = defTagRepos, allowEmpty = True) \
  .values(lambda: 'danbooru id:'+str(json_data['id'])) \
  .values(lambda: 'source:danbooru') \
- .values(lambda: 'rating:'+json_data['rating']) \
- .values(lambda: ('pixiv work:'+str(json_data['pixiv_id'])) if json_data['pixiv_id'] else '')
+ .values(lambda: 'rating:' + {'g': 'general', 's': 'sensitive', 'e': 'explicit', 'q': 'questionable'}.get(json_data['rating'], json_data['rating'])) \
+ .values(lambda: ('pixiv work:'+str(json_data['pixiv_id'])) if json_data['pixiv_id'] else '') \
+ .values(lambda: ('danbooru_parent:'+str(json_data['parent_id'])) if json_data.get('parent_id') else '') \
+ .values(lambda: 'danbooru_has_children:true' if json_data.get('has_children') else '') \
+ .values(lambda: 'page:c2' if json_data.get('parent_id') else '')   # hardcoded marker for child posts
 
 g.domain_time('danbooru.donmai.us', lambda: json_data['created_at'])
 
@@ -239,31 +249,31 @@ g.tags(name = 'danbooru tags', tagRepos = defTagRepos, allowTagsEndingWithColon 
  .values(lambda: [(key+':'+tag if key != 'general' else tag) for (key, tag) in get_namespaces_tags(json_data, 'tag_string_')])
 
 g.urls(name = 'danbooru urls', allowEmpty = True) \
- .values(lambda: json_data['file_url']) \
  .values(lambda: json_data['large_file_url']) \
  .values(lambda: 'https://danbooru.donmai.us/posts/'+str(json_data['id'])) \
  .values(lambda: json_data['source'])
+# .values(lambda: json_data['file_url']) \
 
 # ---- Additional metadata ----
 
 ### IMPORTANT: Hydrus separates notes into 'name' (header) and content/body by looking for the first newline. 
 
-# Creates a note for "Artist Commentary"
+# Creates a note for "Artist Commentary" with header = original_title (fallback to default) and body = original_description
 g.notes(name='danbooru artist commentary', allowEmpty=True, allowNoResult=True) \
   .values(lambda:
-    # Header is always "Danbooru Artist Commentary", content includes title (if exists) and description
-    [f"Danbooru Artist Commentary\n{('**' + c.get('original_title') + '**\n') if c.get('original_title') else ''}{c.get('original_description')}"]
-    if (c := json_data.get('artist_commentary')) and c.get('original_description')
-    else []
+    ([(c.get('original_title') or 'Danbooru Artist Commentary') +
+      (('\n' + c.get('original_description')) if c.get('original_description') else '')]
+     if (c := json_data.get('artist_commentary')) and (c.get('original_title') or c.get('original_description'))
+     else [])
   )
 
-# Creates a second, separate note for "Translated Danbooru Artist Commentary"
+# Creates a second, separate note for the translated commentary with header = translated_title and body = translated_description
 g.notes(name='translated danbooru artist commentary', allowEmpty=True, allowNoResult=True) \
   .values(lambda:
-    # Header is always "Translated Danbooru Artist Commentary", content includes title (if exists) and description
-    [f"Translated Danbooru Artist Commentary\n{('**' + c.get('translated_title') + '**\n') if c.get('translated_title') else ''}{c.get('translated_description')}"]
-    if (c := json_data.get('artist_commentary')) and c.get('translated_description')
-    else []
+    ([(c.get('translated_title') or 'Translated Danbooru Artist Commentary') +
+      (('\n' + c.get('translated_description')) if c.get('translated_description') else '')]
+     if (c := json_data.get('artist_commentary')) and (c.get('translated_title') or c.get('translated_description'))
+     else [])
   )
 
 # Replacements → tags maybe neesd rework
@@ -282,8 +292,10 @@ g.notes(name='translated danbooru artist commentary', allowEmpty=True, allowNoRe
 #g.tags(name='danbooru AI tags', tagRepos=defTagRepos, allowNoResult = True) \
 # .values(lambda: ['ai:'+t for t in json_data.get('ai_tags', [])])
 
+# endregion
+
 #
-# Rules for aibooru
+# region: aibooru
 #
 
 g = j.group(tagReposForNonUrlSources = defTagReposForNonUrlSources, filter = lambda: pstartswith(path, 'gallery-dl/aibooru/'))
@@ -303,9 +315,10 @@ g.urls(name = 'aibooru urls', allowEmpty = True) \
  .values(lambda: json_data['large_file_url']) \
  .values(lambda: 'https://aibooru.online/posts/'+str(json_data['id'])) \
  .values(lambda: json_data['source'])
+# endregion
 
 #
-# Rules for atfbooru
+# region: atfbooru
 #
 
 g = j.group(tagReposForNonUrlSources = defTagReposForNonUrlSources, filter = lambda: pstartswith(path, 'gallery-dl/atfbooru/'))
@@ -323,9 +336,10 @@ g.urls(name = 'atfbooru urls', allowEmpty = True) \
  .values(lambda: json_data['large_file_url']) \
  .values(lambda: 'https://booru.allthefallen.moe/posts/'+str(json_data['id'])) \
  .values(lambda: json_data['source'])
+# endregion
 
 #
-# Rules for gelbooru
+# region: gelbooru
 #
 
 g = j.group(tagReposForNonUrlSources = defTagReposForNonUrlSources, filter = lambda: pstartswith(path, 'gallery-dl/gelbooru/'))
@@ -345,9 +359,10 @@ g.urls(name = 'gelbooru urls', allowEmpty = True) \
  .values(lambda: json_data['file_url']) \
  .values(lambda: 'https://gelbooru.com/index.php?page=post&s=view&id='+str(json_data['id'])) \
  .values(lambda: json_data['source'])
+# endregion
 
 #
-# Rules for Sankaku
+# region: Sankaku
 #
 
 g = j.group(tagReposForNonUrlSources = defTagReposForNonUrlSources, filter = lambda: pstartswith(path, 'gallery-dl/sankaku/'))
@@ -366,9 +381,10 @@ g.urls(name = 'sankaku urls', allowEmpty = True) \
  .values(lambda: json_data['file_url']) \
  .values(lambda: 'https://chan.sankakucomplex.com/en/posts/'+str(json_data['id'])) \
  .values(lambda: json_data['source'] if json_data['source'] else '')
+# endregion
 
 #
-# Rules for Sankaku idolcomplex
+# region: Sankaku idolcomplex
 #
 
 g = j.group(tagReposForNonUrlSources = defTagReposForNonUrlSources, filter = lambda: pstartswith(path, 'gallery-dl/idolcomplex/'))
@@ -384,9 +400,10 @@ g.tags(name = 'idolcomplex tags', tagRepos = defTagRepos) \
 g.urls(name = 'idolcomplex urls', allowEmpty = True) \
  .values(lambda: json_data['file_url']) \
  .values(lambda: 'https://idol.sankakucomplex.com/post/show/'+str(json_data['id']))
+# endregion
 
 #
-# Rules for HentaiFoundry
+# region: HentaiFoundry
 #
 
 g = j.group(tagReposForNonUrlSources = defTagReposForNonUrlSources, filter = lambda: pstartswith(path, 'gallery-dl/hentaifoundry/'))
@@ -402,9 +419,10 @@ g.tags(name = 'hentaifoundry tags', tagRepos = defTagRepos) \
 g.urls(name = 'hentaifoundry urls') \
  .values(lambda: json_data['src']) \
  .values(lambda: 'https://www.hentai-foundry.com/pictures/user/'+json_data['user']+'/'+str(json_data['index']))
+# endregion
 
 #
-# Rules for Deviantart
+# region: Deviantart
 #
 
 g = j.group(tagReposForNonUrlSources = defTagReposForNonUrlSources, filter = lambda: pstartswith(path, 'gallery-dl/deviantart/'))
@@ -420,9 +438,10 @@ g.urls(name = 'deviantart urls', allowEmpty = True) \
  .values(lambda: json_data['content']['src'] if 'content' in json_data else '') \
  .values(lambda: json_data['target']['src'] if 'target' in json_data else '') \
  .values(lambda: json_data['url'])
+# endregion
 
 #
-# Rules for Twitter
+# region: Twitter
 #
 
 g = j.group(tagReposForNonUrlSources = defTagReposForNonUrlSources, filter = lambda: pstartswith(path, 'gallery-dl/twitter/') and pathlen(path) > 3)
@@ -451,9 +470,10 @@ g.notes(name = 'tweet text', allowEmpty = True) \
 
 g.domain_time('x.com', lambda: json_data['date'])
 g.domain_time('twitter.com', lambda: json_data['date'])
+# endregion
 
 #
-# Rules for Bluesky
+# region: Bluesky
 #
 
 g = j.group(tagReposForNonUrlSources = defTagReposForNonUrlSources, filter = lambda: pstartswith(path, 'gallery-dl/bluesky/'))
@@ -475,9 +495,10 @@ g.notes(name = 'bluesky post text and description', allowEmpty = True) \
  .values(lambda: "post description\n"+json_data['description'])
 
 g.domain_time(lambda: json_data['instance'], lambda: json_data['createdAt'])
+# endregion
 
 #
-# Rules for kemono.party
+# region: kemono.party
 #
 
 # everything but discord (discord entries lack most of the metadata used here)
@@ -511,9 +532,10 @@ g.tags(name='kemonoparty discord generated tags', tagRepos = defTagRepos, allowN
 
 g.urls(name='kemono discord post url') \
  .values(lambda: 'https://kemono.cr/discord/server/{}'.format(json_data['server']))
+# endregion
 
 #
-# Rules for coomer.party
+# region: coomer.party
 #
 
 g = j.group(tagReposForNonUrlSources = defTagReposForNonUrlSources, filter = lambda: pstartswith(path, 'gallery-dl/coomerparty/') or pstartswith(path, 'gallery-dl/coomer/'))
@@ -529,9 +551,10 @@ g = j.group(tagReposForNonUrlSources = defTagReposForNonUrlSources, filter = lam
 
 g.urls(name = 'directlink url') \
  .values(lambda: clean_url('https://'+json_data['domain']+'/'+json_data['path']+'/'+json_data['filename']+'.'+json_data['extension']))
+# endregion
 
 #
-# Rules for 3dbooru
+# region: 3dbooru
 #
 
 g = j.group(tagReposForNonUrlSources = defTagReposForNonUrlSources, filter = lambda: pstartswith(path, 'gallery-dl/3dbooru/'))
@@ -548,9 +571,10 @@ g.tags(name = '3dbooru tags', tagRepos = defTagRepos) \
 g.urls(name = '3dbooru URLs') \
  .values(lambda: json_data['file_url']) \
  .values(lambda: 'http://behoimi.org/post/show/'+str(json_data['id']))
+# endregion
 
 #
-# Rules for safebooru
+# region: safebooru
 #
 
 g = j.group(tagReposForNonUrlSources = defTagReposForNonUrlSources, filter = lambda: pstartswith(path, 'gallery-dl/safebooru/'))
@@ -569,9 +593,10 @@ g.urls(name = 'safebooru URLs', allowEmpty = True) \
  .values(lambda: json_data['file_url']) \
  .values(lambda: 'https://safebooru.org/index.php?page=post&s=view&id='+json_data['id']) \
  .values(lambda: json_data['source'])
+# endregion
 
 #
-# Rules for Tumblr
+# region: Tumblr
 #
 
 g = j.group(tagReposForNonUrlSources = defTagReposForNonUrlSources, filter = lambda: pstartswith(path, 'gallery-dl/tumblr/'))
@@ -587,9 +612,10 @@ g.urls(name = 'tumblr URLs', allowEmpty = True) \
  .values(lambda: json_data['post_url']) \
  .values(lambda: json_data['photo']['url'] if 'photo' in json_data else '') \
  .values(lambda: json_data['image_permalink'] if 'image_permalink' in json_data else '')
+# endregion
 
 #
-# Rules for Fantia
+# region: Fantia
 #
 
 g = j.group(tagReposForNonUrlSources = defTagReposForNonUrlSources, filter = lambda: pstartswith(path, 'gallery-dl/fantia/'))
@@ -605,9 +631,10 @@ g.tags(name = 'fantia generated tags', tagRepos = defTagRepos, allowEmpty = True
 g.urls(name = 'fantia URLs') \
  .values(lambda: json_data['post_url']) \
  .values(lambda: json_data['file_url'])
+# endregion
 
 #
-# Rules for Fanbox
+# region: Fanbox
 #
 
 g = j.group(tagReposForNonUrlSources = defTagReposForNonUrlSources, filter = lambda: pstartswith(path, 'gallery-dl/fanbox/'))
@@ -626,9 +653,10 @@ g.urls(name = 'fanbox URLs', allowEmpty = True) \
  .values(lambda: json_data['coverImageUrl'] if json_data['isCoverImage'] else '') \
  .values(lambda: json_data['fileUrl']) \
  .values(lambda: 'https://'+json_data['creatorId']+'.fanbox.cc/posts/'+json_data['id'])
+# endregion
 
 #
-# Rules for lolibooru
+# region: lolibooru
 #
 
 g = j.group(tagReposForNonUrlSources = defTagReposForNonUrlSources, filter = lambda: pstartswith(path, 'gallery-dl/lolibooru/'))
@@ -645,9 +673,10 @@ g.urls(name = 'lolibooru URLs', allowEmpty = True) \
  .values(lambda: json_data['file_url']) \
  .values(lambda: 'https://lolibooru.moe/post/show/'+str(json_data['id'])) \
  .values(lambda: json_data['source'])
+# endregion
 
 #
-# Rules for yande.re
+# region: yande.re
 #
 
 g = j.group(tagReposForNonUrlSources = defTagReposForNonUrlSources, filter = lambda: pstartswith(path, 'gallery-dl/yandere/'))
@@ -664,9 +693,10 @@ g.urls(name = 'yandere URLs', allowEmpty = True) \
  .values(lambda: json_data['file_url']) \
  .values(lambda: 'https://yande.re/post/show/'+str(json_data['id'])) \
  .values(lambda: json_data['source'])
+# endregion
 
 #
-# Rules for Artstation
+# region: Artstation
 #
 
 g = j.group(tagReposForNonUrlSources = defTagReposForNonUrlSources, filter = lambda: pstartswith(path, 'gallery-dl/artstation/'))
@@ -688,9 +718,10 @@ g.urls(name = 'artstation asset image URL', allowEmpty = True) \
 
 g.urls(name = 'artstation permalink', allowEmpty = True) \
  .values(lambda: json_data['permalink'])
+# endregion
 
 #
-# Rules for imgur
+# region: imgur
 #
 
 g = j.group(tagReposForNonUrlSources = defTagReposForNonUrlSources, filter = lambda: pstartswith(path, 'gallery-dl/imgur/'))
@@ -706,9 +737,10 @@ g.urls(name = 'imgur image URL') \
 
 g.urls(name = 'imgur album URL', allowEmpty = True) \
  .values(lambda: json_data['album']['url'] if 'album' in json_data else '')
+# endregion
 
 #
-# Rules for seiso.party
+# region: seiso.party
 #
 
 g = j.group(tagReposForNonUrlSources = defTagReposForNonUrlSources, filter = lambda: pstartswith(path, 'gallery-dl/seisoparty/'))
@@ -719,9 +751,10 @@ g.tags(name = 'seisoparty generated tags', tagRepos = defTagRepos) \
  .values(lambda: 'seiso.party service:'+json_data['service']) \
  .values(lambda: 'seiso.party id:'+json_data['id']) \
  .values(lambda: 'seiso.party user id:'+json_data['user'])
+# endregion
 
 #
-# Rules for rule34.xxx
+# region: rule34.xxx
 #
 
 g = j.group(tagReposForNonUrlSources = defTagReposForNonUrlSources, filter = lambda: pstartswith(path, 'gallery-dl/rule34/'))
@@ -748,9 +781,10 @@ g.urls(name = 'rule34 urls', allowEmpty = True) \
  .values(lambda: json_data['file_url']) \
  .values(lambda: 'https://rule34.xxx/index.php?page=post&s=view&id='+json_data['id']) \
  .values(lambda: json_data['source'])
+# endregion
 
 #
-# Rules for e621
+# region: e621
 #
 
 g = j.group(tagReposForNonUrlSources = defTagReposForNonUrlSources, filter = lambda: pstartswith(path, 'gallery-dl/e621/'))
@@ -769,9 +803,10 @@ g.tags(name = 'e621 post tags', tagRepos = defTagRepos, allowTagsEndingWithColon
 g.urls(name = 'e621 urls', allowEmpty = True) \
  .values(lambda: json_data['gallerydl_file_url']) \
  .values(lambda: 'https://e621.net/posts/' + str(json_data['id']))
+# endregion
 
 #
-# Rules for Furaffinity
+# region: Furaffinity
 #
 
 g = j.group(tagReposForNonUrlSources = defTagReposForNonUrlSources, filter = lambda: pstartswith(path, 'gallery-dl/furaffinity/'))
@@ -791,9 +826,10 @@ g.tags(name = 'furaffinity tags', tagRepos = defTagRepos, allowNoResult = True, 
 g.urls(name = 'furaffinity urls', allowEmpty = True) \
  .values(lambda: json_data['url']) \
  .values(lambda: 'https://www.furaffinity.net/view/'+str(json_data['id'])+'/')
+# endregion
 
 #
-# Rules for Instagram
+# region: Instagram
 #
 
 g = j.group(tagReposForNonUrlSources = defTagReposForNonUrlSources, filter = lambda: pstartswith(path, 'gallery-dl/instagram/'))
@@ -809,9 +845,10 @@ g.tags(name = 'instagram generated tags', tagRepos = defTagRepos, allowNoResult 
 
 g.urls(name = 'instagram urls') \
  .values(lambda: 'https://www.instagram.com/p/'+str(json_data['shortcode']))
+# endregion
 
 #
-# Rules for redgifs
+# region: redgifs
 #
 
 g = j.group(tagReposForNonUrlSources = defTagReposForNonUrlSources, filter = lambda: pstartswith(path, 'gallery-dl/redgifs/'))
@@ -826,9 +863,10 @@ g.tags(name = 'redgifs tags', tagRepos = defTagRepos, allowNoResult = True, allo
 
 g.urls(name = 'redgifs urls') \
  .values(lambda: 'https://www.redgifs.com/watch/'+str(json_data['filename']))
+# endregion
 
 #
-# Rules for tiktok
+# region: tiktok
 #
 
 g = j.group(tagReposForNonUrlSources = defTagReposForNonUrlSources, filter = lambda: pstartswith(path, 'gallery-dl/tiktok/'))
@@ -842,9 +880,10 @@ g.tags(name = 'tiktok generated tags', tagRepos = defTagRepos, allowNoResult = T
 
 g.urls(name = 'tiktok urls') \
  .values(lambda: 'https://www.tiktok.com/@'+str(json_data['author']['uniqueId'])+'/video/'+str(json_data['id']))
+# endregion
 
 #
-# Rules for reddit
+# region: reddit
 #
 
 g = j.group(tagReposForNonUrlSources = defTagReposForNonUrlSources, filter = lambda: pstartswith(path, 'gallery-dl/reddit/'))
@@ -860,3 +899,20 @@ g.tags(name = 'reddit generated tags', tagRepos = defTagRepos, allowNoResult = T
 g.urls(name = 'reddit urls') \
  .values(lambda: 'https://www.reddit.com/'+str(json_data['permalink'])) \
  .values(lambda: 'https://i.redd.it/'+json_data['filename']+'.'+json_data['extension'])
+# endregion
+
+#
+# region: Iwara
+#
+
+g = j.group(tagReposForNonUrlSources = defTagReposForNonUrlSources, filter = lambda: pstartswith(path, 'gallery-dl/iwara/'))
+
+g.tags(name = 'iwara generated tags', tagRepos = defTagRepos) \
+ .values(lambda: 'iwara id:'+json_data['id']) \
+ .values(lambda: 'creator:'+json_data['user']['name']) \
+ .values(lambda: 'creator:'+json_data['user']['nick']) \
+ .values(lambda: 'title:'+json_data['title'])
+
+g.notes(name = 'iwara post description', allowEmpty = True) \
+ .values(lambda: "iwara post description\n"+str(json_data['user']['description']))
+# endregion
