@@ -64,8 +64,9 @@ g.tags(name = 'hydownloader source site', tagRepos = defTagRepos) \
 g.urls(name = 'additional URLs', allowNoResult = True) \
  .values(lambda: extra_tags['urls'])
 
-g.urls(name = 'source URLs from single URL queue', allowNoResult = True) \
- .values(lambda: single_urls)
+# i dont want/need this because 1. i dont see what its good for (in my case) 2. it doesnt work with danbooru ordfav:user sorting and spits out "[...]/posts?page=1"
+# g.urls(name = 'source URLs from single URL queue', allowNoResult = True) \
+#  .values(lambda: single_urls)
 
 g.urls(name = 'gallery-dl file url', allowEmpty = True) \
  .values(lambda: (u := json_data.get('gallerydl_file_url', '')) and ('' if u.startswith('text:') else u))
@@ -249,9 +250,9 @@ g.tags(name = 'danbooru tags', tagRepos = defTagRepos, allowTagsEndingWithColon 
  .values(lambda: [(key+':'+tag if key != 'general' else tag) for (key, tag) in get_namespaces_tags(json_data, 'tag_string_')])
 
 g.urls(name = 'danbooru urls', allowEmpty = True) \
- .values(lambda: json_data['large_file_url']) \
  .values(lambda: 'https://danbooru.donmai.us/posts/'+str(json_data['id'])) \
  .values(lambda: json_data['source'])
+# .values(lambda: json_data['large_file_url']) \ # this is sample
 # .values(lambda: json_data['file_url']) \
 
 # ---- Additional metadata ----
@@ -279,18 +280,6 @@ g.notes(name='translated danbooru artist commentary', allowEmpty=True, allowNoRe
 # Replacements → tags maybe neesd rework
 #g.tags(name='danbooru replacements', tagRepos=defTagRepos, allowEmpty=True, allowNoResult=True) \
 #  .values(lambda: ['replacement:'+str(r) for r in json_data.get('replacements', [])])
-
-# Parent → tag needs rework check json for all
-#g.tags(name='danbooru parent', tagRepos=defTagRepos, allowEmpty=True, allowNoResult=True) \
-#  .values(lambda: ['parent:'+str(json_data['parent'])] if 'parent' in json_data and json_data['parent'] else [])
-
-# Children → tags need rework
-#g.tags(name='danbooru children', tagRepos=defTagRepos, allowEmpty=True, allowNoResult=True) \
-#  .values(lambda: ['child:'+str(c) for c in json_data.get('children', [])])
-
-# AI tags → tags needs rework
-#g.tags(name='danbooru AI tags', tagRepos=defTagRepos, allowNoResult = True) \
-# .values(lambda: ['ai:'+t for t in json_data.get('ai_tags', [])])
 
 # endregion
 
@@ -448,19 +437,20 @@ g = j.group(tagReposForNonUrlSources = defTagReposForNonUrlSources, filter = lam
 
 g.tags(name = 'twitter generated tags', tagRepos = defTagRepos) \
  .values(lambda: 'creator:'+json_data['author']['name']) \
- .values(lambda: 'creator:'+json_data['author']['nick']) \
- .values(lambda: 'creator:'+str(json_data['author']['id'])) \
+ .values(lambda: 'creator:twitterid-'+str(json_data['author']['id'])) \
  .values(lambda: 'tweet id:'+str(json_data['tweet_id']))
+# .values(lambda: 'creator:'+json_data['author']['nick']) \ # this is display name, i dont think it has any value
 
 g.urls(name = 'twitter urls') \
- .values(lambda: 'https://twitter.com/i/status/'+str(json_data['tweet_id'])) \
  .values(lambda: 'https://twitter.com/'+json_data['author']['name']+'/status/'+str(json_data['tweet_id']))
+# .values(lambda: 'https://twitter.com/i/status/'+str(json_data['tweet_id'])) \
 
-#g.tags(name = 'extra twitter generated tags', tagRepos = defTagRepos, allowEmpty = True) \
-# .values(lambda: 'image:'+str(json_data['num']) if json_data['count'] > 1 else '') \
-# .values(lambda: 'reply to:' + json_data['reply_to'] if 'reply_to' in json_data else '') \
+g.tags(name = 'extra twitter generated tags', tagRepos = defTagRepos, allowEmpty = True) \
+ .values(lambda: 'page:'+str(json_data['num']) if json_data['count'] > 1 else '') \
+ .values(lambda: 'source:twitter')
 # .values(lambda: 'twitter_gif' if ('bitrate' in json_data and json_data['bitrate'] == 0) else '') \
-# .values(lambda: 'source:twitter.com')
+# .values(lambda: 'reply to:' + json_data['reply_to'] if 'reply_to' in json_data else '') \
+
 
 g.tags(name = 'tweet hashtags', tagRepos = defTagRepos, allowEmpty = True, ) \
 .values(lambda: ['tweet hashtag:' + hashtag for hashtag in json_data['hashtags']] if 'hashtags' in json_data else '')
