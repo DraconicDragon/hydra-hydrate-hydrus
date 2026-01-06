@@ -54,7 +54,8 @@
             "videos": true,
             "path-restrict": "windows"
         },
-        "danbooru": {
+        "danbooru":
+        {
             "username": null,
             "password": null,
             "ugoira": true,
@@ -400,12 +401,18 @@
             "revisions": true,
             "announcements": true,
             "endpoint": "posts+",
+            "archives": true,
             "path-restrict": "windows"
         },
         "bluesky":
         {
             "metadata": true,
             "path-restrict": "windows"
+        },
+        "rule34":
+        {
+            "api-key": "your rule34 api key here",
+            "user-id": "your rule34 user id here"
         }
     },
 
