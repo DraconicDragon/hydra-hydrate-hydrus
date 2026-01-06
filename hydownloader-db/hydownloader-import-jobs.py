@@ -9,16 +9,20 @@
 
 # region: default config
 defAPIURL = "http://127.0.0.1:45869"
-defAPIKey = "they key of keys"
+defAPIKey = "the key of keys"
 defTagRepos = ["downloader tags"]
 defTagReposForNonUrlSources = ["downloader tags"]
+defTagReposTwitter = ["twitter tags"]
+defTagReposPixiv = ["pixiv tags"]
 # These are the defaults that Hydrus automatically creates,
 # you'll have to add here any others that appear in the importer configuration.
 # You can get the key from Hydrus in the review services window.
 defServiceNamesToKeys = {
-    "my tags": "6c6f63616c2074616773",
-    "local tags": "6c6f63616c2074616773",
-    "downloader tags": "646f776e6c6f616465722074616773"
+  "my tags": "6c6f63616c2074616773",
+  "local tags": "6c6f63616c2074616773",
+  "downloader tags": "646f776e6c6f616465722074616773",
+  "twitter tags": "",
+  "pixiv tags": ""
 }
 # This function will be applied to the final results generated from each file
 # You can implement any global blacklists/whitelists or transformations here
@@ -78,19 +82,19 @@ g.urls(name = 'gallery-dl file url', allowEmpty = True) \
 
 g = j.group(tagReposForNonUrlSources = defTagReposForNonUrlSources, filter = lambda: pstartswith(path, 'gallery-dl/pixiv/'))
 
-g.tags(name = 'pixiv tags (original), new json format', tagRepos = defTagRepos, allowNoResult = True, allowTagsEndingWithColon = True) \
+g.tags(name = 'pixiv tags (original), new json format', tagRepos = defTagReposPixiv, allowNoResult = True, allowTagsEndingWithColon = True) \
  .values(lambda: [(tag if type(tag) is str else tag['name']) for tag in json_data['tags']] if not 'untranslated_tags' in json_data else [])
 
-g.tags(name = 'pixiv tags (translated), new json format', tagRepos = defTagRepos, allowNoResult = True, allowTagsEndingWithColon = True) \
+g.tags(name = 'pixiv tags (translated), new json format', tagRepos = defTagReposPixiv, allowNoResult = True, allowTagsEndingWithColon = True) \
  .values(lambda: [tag['translated_name'] for tag in json_data['tags'] if type(tag) is not str and tag['translated_name'] is not None] if not 'untranslated_tags' in json_data else [])
 
-g.tags(name = 'pixiv tags (original), old json format', tagRepos = defTagRepos, allowNoResult = True, allowTagsEndingWithColon = True) \
+g.tags(name = 'pixiv tags (original), old json format', tagRepos = defTagReposPixiv, allowNoResult = True, allowTagsEndingWithColon = True) \
  .values(lambda: json_data['untranslated_tags'] if 'untranslated_tags' in json_data else [])
 
-g.tags(name = 'pixiv tags (translated), old json format', tagRepos = defTagRepos, allowNoResult = True, allowTagsEndingWithColon = True) \
+g.tags(name = 'pixiv tags (translated), old json format', tagRepos = defTagReposPixiv, allowNoResult = True, allowTagsEndingWithColon = True) \
  .values(lambda: json_data['tags'] if 'untranslated_tags' in json_data else [])
 
-g.tags(name = 'pixiv generated tags', tagRepos = defTagRepos) \
+g.tags(name = 'pixiv generated tags', tagRepos = defTagReposPixiv) \
  .values(lambda: 'page:'+str(int(json_data['suffix'][2:])+1) if json_data['suffix'] else 'page:1') \
  .values(lambda: 'pixiv work:'+str(json_data['id'])) \
  .values(lambda: 'creator:'+json_data['user']['account']) \
@@ -98,11 +102,17 @@ g.tags(name = 'pixiv generated tags', tagRepos = defTagRepos) \
  .values(lambda: 'rating:'+json_data['rating']) \
  .values(lambda: 'pixiv id:'+str(json_data['user']['id']))
 
-g.tags(name = 'pixiv generated tags (title)', tagRepos = defTagRepos, allowEmpty = True, allowTagsEndingWithColon = True) \
+g.tags(name = 'pixiv source tag', tagRepos = defTagRepos) \
+ .values(lambda: 'source:pixiv')
+
+g.tags(name = 'pixiv generated tags (title)', tagRepos = defTagReposPixiv, allowEmpty = True, allowTagsEndingWithColon = True) \
  .values(lambda: ('title:'+json_data['title']) if json_data['title'] and json_data['title'].strip() else '')
 
 g.urls(name = 'pixiv artwork url') \
  .values(lambda: 'https://www.pixiv.net/en/artworks/'+str(json_data['id']))
+
+g.notes(name = 'pixiv caption') \
+ .values(lambda: assemble_note(json_data, 'pixiv caption', ['title'], ['caption']))
 # endregion
 
 #
@@ -124,6 +134,9 @@ g.tags(name = 'nijie generated tags', tagRepos = defTagRepos) \
 g.urls(name = 'nijie urls') \
  .values(lambda: 'https://nijie.info/view.php?id='+str(json_data['image_id'])) \
  .values(lambda: json_data['url'])
+
+g.notes(name = 'nijie description') \
+ .values(lambda: assemble_note(json_data, 'nijie description', ['title'], ['description']))
 # endregion
 
 #
@@ -144,6 +157,9 @@ g.tags(name = 'patreon generated tags (title)', tagRepos = defTagRepos, allowEmp
 
 g.urls(name = 'patreon urls') \
  .values(lambda: json_data['url'])
+
+g.notes(name = 'patreon description') \
+ .values(lambda: assemble_note(json_data, 'patreon description', ['title'], ['content']))
 # endregion
 
 #
@@ -166,6 +182,12 @@ g.urls(name = 'newgrounds url') \
 
 g.urls(name = 'newgrounds post url') \
  .values(lambda: json_data['post_url'])
+
+g.notes(name = 'newgrounds description') \
+ .values(lambda: assemble_note(json_data, 'newgrounds description', ['title'], ['description'], skip_if_empty_content = True))
+
+g.notes(name = 'newgrounds comment') \
+ .values(lambda: assemble_note(json_data, 'newgrounds comment', ['title'], ['comment'], skip_if_empty_content = True))
 # endregion
 
 #
@@ -187,6 +209,9 @@ g.tags(name = 'mastodon generated tags', tagRepos = defTagRepos) \
 g.urls(name = 'mastodon urls') \
  .values(lambda: json_data['url']) \
  .values(lambda: json_data['uri'])
+
+g.notes(name = 'mastodon content') \
+ .values(lambda: "mastodon content\n"+str(json_data["content"]))
 # endregion
 
 #
@@ -211,6 +236,9 @@ g.tags(name = 'misskey generated tags', tagRepos = defTagRepos, skipOnError = Tr
 g.urls(name = 'misskey urls') \
  .values(lambda: json_data['file']['url']) \
  .values(lambda: 'https://'+json_data['instance']+'/notes/'+json_data['id'])
+
+g.notes(name = 'misskey content') \
+ .values(lambda: "misskey content\n"+str(json_data["content"]))
 # endregion
 
 #
@@ -260,7 +288,7 @@ g.urls(name = 'danbooru urls', allowEmpty = True) \
 ### IMPORTANT: Hydrus separates notes into 'name' (header) and content/body by looking for the first newline. 
 
 # Creates a note for "Artist Commentary" with header = original_title (fallback to default) and body = original_description
-g.notes(name='danbooru artist commentary', allowEmpty=True, allowNoResult=True) \
+g.notes(name = 'danbooru artist commentary', allowEmpty=True, allowNoResult = True) \
   .values(lambda:
     ([(c.get('original_title') or 'Danbooru Artist Commentary') +
       (('\n' + c.get('original_description')) if c.get('original_description') else '')]
@@ -271,15 +299,16 @@ g.notes(name='danbooru artist commentary', allowEmpty=True, allowNoResult=True) 
 # Creates a second, separate note for the translated commentary with header = translated_title and body = translated_description
 g.notes(name='translated danbooru artist commentary', allowEmpty=True, allowNoResult=True) \
   .values(lambda:
-    ([(c.get('translated_title') or 'Translated Danbooru Artist Commentary') +
+    ([( (title := c.get('translated_title')) and title + " (TL'd)" or 'Translated Danbooru Artist Commentary') +
       (('\n' + c.get('translated_description')) if c.get('translated_description') else '')]
      if (c := json_data.get('artist_commentary')) and (c.get('translated_title') or c.get('translated_description'))
      else [])
   )
 
-# Replacements → tags maybe neesd rework
-#g.tags(name='danbooru replacements', tagRepos=defTagRepos, allowEmpty=True, allowNoResult=True) \
-#  .values(lambda: ['replacement:'+str(r) for r in json_data.get('replacements', [])])
+g.notes(name = 'danbooru notes', allowNoResult = True) \
+ .values(lambda: [] if not json_data['notes'] else "danbooru notes\n"+json.dumps(json_data['notes'], indent=4))
+# .values(lambda: assemble_note(json_data, 'danbooru artist commentary', ['artist_commentary','original_title'], ['artist_commentary','original_description'])) \
+# .values(lambda: assemble_note(json_data, 'translated danbooru artist commentary', ['artist_commentary','translated_title'], ['artist_commentary','translated_description'])) \
 
 # endregion
 
@@ -325,6 +354,11 @@ g.urls(name = 'atfbooru urls', allowEmpty = True) \
  .values(lambda: json_data['large_file_url']) \
  .values(lambda: 'https://booru.allthefallen.moe/posts/'+str(json_data['id'])) \
  .values(lambda: json_data['source'])
+
+g.notes(name = 'atfbooru artist commentary and notes', allowNoResult = True) \
+ .values(lambda: assemble_note(json_data, 'atfbooru artist commentary', ['artist_commentary','original_title'], ['artist_commentary','original_description'])) \
+ .values(lambda: assemble_note(json_data, 'atfbooru artist commentary (translated)', ['artist_commentary','translated_title'], ['artist_commentary','translated_description'])) \
+ .values(lambda: [] if not json_data['notes'] else "atfbooru notes\n"+json.dumps(json_data['notes'], indent=4))
 # endregion
 
 #
@@ -348,6 +382,9 @@ g.urls(name = 'gelbooru urls', allowEmpty = True) \
  .values(lambda: json_data['file_url']) \
  .values(lambda: 'https://gelbooru.com/index.php?page=post&s=view&id='+str(json_data['id'])) \
  .values(lambda: json_data['source'])
+
+g.notes(name = 'gelbooru notes', allowNoResult = True) \
+ .values(lambda: [] if not json_data['notes'] else "gelbooru notes\n"+json.dumps(json_data['notes'], indent=4))
 # endregion
 
 #
@@ -408,6 +445,9 @@ g.tags(name = 'hentaifoundry tags', tagRepos = defTagRepos) \
 g.urls(name = 'hentaifoundry urls') \
  .values(lambda: json_data['src']) \
  .values(lambda: 'https://www.hentai-foundry.com/pictures/user/'+json_data['user']+'/'+str(json_data['index']))
+
+g.notes(name = 'hentaifoundry description') \
+ .values(lambda: assemble_note(json_data, 'hentaifoundry description', ['title'], ['description']))
 # endregion
 
 #
@@ -435,25 +475,30 @@ g.urls(name = 'deviantart urls', allowEmpty = True) \
 
 g = j.group(tagReposForNonUrlSources = defTagReposForNonUrlSources, filter = lambda: pstartswith(path, 'gallery-dl/twitter/') and pathlen(path) > 3)
 
-g.tags(name = 'twitter generated tags', tagRepos = defTagRepos) \
+g.tags(name = 'twitter generated tags', tagRepos = defTagReposTwitter) \
  .values(lambda: 'creator:'+json_data['author']['name']) \
- .values(lambda: 'creator:twitterid-'+str(json_data['author']['id'])) \
+ .values(lambda: 'creator:twitterid:'+str(json_data['author']['id'])) \
  .values(lambda: 'tweet id:'+str(json_data['tweet_id']))
-# .values(lambda: 'creator:'+json_data['author']['nick']) \ # this is display name, i dont think it has any value
+# .values(lambda: 'creator:'+json_data['author']['nick'])
+# NOTE: 'nick' is display name, sometimes japanese artists have japanese letters for nick and latin letter variant as handle
+# generally i dont like to have all 3 (id, handle, nick/display name) but nick can overlap with pixiv name
+# but also i dont really want my source to be twitter in the first place if it exists anywhere else because twitter compression is awful
+# I'll leave it commented in
 
 g.urls(name = 'twitter urls') \
  .values(lambda: 'https://twitter.com/'+json_data['author']['name']+'/status/'+str(json_data['tweet_id']))
 # .values(lambda: 'https://twitter.com/i/status/'+str(json_data['tweet_id'])) \
 
-g.tags(name = 'extra twitter generated tags', tagRepos = defTagRepos, allowEmpty = True) \
+g.tags(name = 'extra twitter generated tags', tagRepos = defTagReposTwitter, allowEmpty = True) \
  .values(lambda: 'page:'+str(json_data['num']) if json_data['count'] > 1 else '') \
- .values(lambda: 'source:twitter')
-# .values(lambda: 'twitter_gif' if ('bitrate' in json_data and json_data['bitrate'] == 0) else '') \
+ .values(lambda: 'twitter_gif' if ('bitrate' in json_data and json_data['bitrate'] == 0) else '')
 # .values(lambda: 'reply to:' + json_data['reply_to'] if 'reply_to' in json_data else '') \
 
+g.tags(name = 'twitter source tag', tagRepos = defTagRepos) \
+ .values(lambda: 'source:twitter')
 
-g.tags(name = 'tweet hashtags', tagRepos = defTagRepos, allowEmpty = True, ) \
-.values(lambda: ['tweet hashtag:' + hashtag for hashtag in json_data['hashtags']] if 'hashtags' in json_data else '')
+g.tags(name = 'tweet hashtags', tagRepos = defTagReposTwitter, allowEmpty = True, ) \
+ .values(lambda: ['tweet hashtag:' + hashtag for hashtag in json_data['hashtags']] if 'hashtags' in json_data else '')
 
 g.notes(name = 'tweet text', allowEmpty = True) \
  .values(lambda: "tweet text\n"+json_data['content'])
@@ -488,18 +533,18 @@ g.domain_time(lambda: json_data['instance'], lambda: json_data['createdAt'])
 # endregion
 
 #
-# region: kemono.party
+# region: kemono
 #
 
 # everything but discord (discord entries lack most of the metadata used here)
 g = j.group(tagReposForNonUrlSources = defTagReposForNonUrlSources, filter = lambda: (pstartswith(path, 'gallery-dl/kemonoparty/') or pstartswith(path, 'gallery-dl/kemono/')) and json_data['subcategory'] != 'discord')
 
-g.tags(name = 'kemonoparty generated tags', tagRepos = defTagRepos, allowEmpty = True) \
+g.tags(name = 'kemono generated tags', tagRepos = defTagRepos, allowEmpty = True) \
  .values(lambda: 'title:'+json_data['title']) \
  .values(lambda: 'creator:'+json_data['username'] if 'username' in json_data else '') \
- .values(lambda: 'kemono.party service:'+json_data['service']) \
- .values(lambda: 'kemono.party id:'+json_data['id']) \
- .values(lambda: 'kemono.party user id:'+json_data['user']) \
+ .values(lambda: 'kemono service:'+json_data['service']) \
+ .values(lambda: 'kemono id:'+json_data['id']) \
+ .values(lambda: 'kemono uid:'+json_data['user']) \
  .values(lambda: '{} id:{}'.format(('pixiv' if json_data['service'] == 'fanbox' else json_data['service']), json_data['user']))
 
 # non-discord post URL
@@ -621,6 +666,10 @@ g.tags(name = 'fantia generated tags', tagRepos = defTagRepos, allowEmpty = True
 g.urls(name = 'fantia URLs') \
  .values(lambda: json_data['post_url']) \
  .values(lambda: json_data['file_url'])
+
+g.notes(name = 'fantia post/content comment', allowNoResult = True) \
+ .values(lambda: assemble_note(json_data, 'fantia post comment', ['post_title'], ['comment'])) \
+ .values(lambda: assemble_note(json_data, 'fantia content comment', ['content_tile'], ['content_comment']))
 # endregion
 
 #
@@ -643,6 +692,9 @@ g.urls(name = 'fanbox URLs', allowEmpty = True) \
  .values(lambda: json_data['coverImageUrl'] if json_data['isCoverImage'] else '') \
  .values(lambda: json_data['fileUrl']) \
  .values(lambda: 'https://'+json_data['creatorId']+'.fanbox.cc/posts/'+json_data['id'])
+
+g.notes(name = 'fanbox content') \
+ .values(lambda: assemble_note(json_data, 'fanbox content', ['title'], ['content']))
 # endregion
 
 #
@@ -708,6 +760,9 @@ g.urls(name = 'artstation asset image URL', allowEmpty = True) \
 
 g.urls(name = 'artstation permalink', allowEmpty = True) \
  .values(lambda: json_data['permalink'])
+
+g.notes(name = 'artstation description') \
+ .values(lambda: assemble_note(json_data, 'artstation description', ['title'], ['description']))
 # endregion
 
 #
